@@ -16,7 +16,7 @@ try:
 
     kernel_path = os.path.abspath(os.path.join('..'))
     sys.path.append(kernel_path)
-    from kernels.window_process.window_process import WindowProcess, WindowProcessReverse
+    from kernels.window_processs.window_process import WindowProcess, WindowProcessReverse
 
 except:
     WindowProcess = None
@@ -592,18 +592,26 @@ class SwinTransformer(nn.Module):
             x = x + self.absolute_pos_embed
         x = self.pos_drop(x)
 
-        for layer in self.layers:
-            x = layer(x)
+        # for layer in self.layers:
+        #     x = layer(x)
 
-        x = self.norm(x)  # B L C
-        x = self.avgpool(x.transpose(1, 2))  # B C 1
-        x = torch.flatten(x, 1)
-        return x
+        # x = self.norm(x)  # B L C
+        # x = self.avgpool(x.transpose(1, 2))  # B C 1
+        # x = torch.flatten(x, 1)
+        # return x
+
+        x_1_4, x_1_8 = self.layers[0](x)
+        x_1_8, x_1_16 = self.layers[1](x_1_8)
+        x_1_16, x_1_32 = self.layers[2](x_1_16)
+        x_1_32 = self.layers[3](x_1_32)
+        x_1_32 = self.norm(x_1_32)
+        return x_1_4, x_1_8, x_1_16, x_1_32
+        
 
     def forward(self, x):
-        x = self.forward_features(x)
+        x_1_4, x_1_8, x_1_16, x_1_32 = self.forward_features(x)
         x = self.head(x)
-        return x
+        return x_1_4, x_1_8, x_1_16, x_1_32
 
     def flops(self):
         flops = 0
@@ -658,6 +666,5 @@ def swin_transformer(pretrained=True, **kwargs):  # adopt transformers for token
 
         # load_checkpoint(model, args.pretrained_model, use_ema=True)
         print('Model loaded from {}'.format(args.pretrained_model))
-        # load_pretrained(
-        #     model, num_classes=model.num_classes, in_chans=kwargs.get('in_chans', 3))
+        # load_pretrained(model, num_classes=model.num_classes, in_chans=kwargs.get('in_chans', 3))
     return model
