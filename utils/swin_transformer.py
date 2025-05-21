@@ -16,7 +16,7 @@ try:
 
     kernel_path = os.path.abspath(os.path.join('..'))
     sys.path.append(kernel_path)
-    from kernels.window_process.window_process import WindowProcess, WindowProcessReverse
+    from kernels.window_processs.window_process import WindowProcess, WindowProcessReverse
 
 except:
     WindowProcess = None
@@ -658,6 +658,5 @@ def swin_transformer(pretrained=True, **kwargs):  # adopt transformers for token
 
         # load_checkpoint(model, args.pretrained_model, use_ema=True)
         print('Model loaded from {}'.format(args.pretrained_model))
-        # load_pretrained(
-        #     model, num_classes=model.num_classes, in_chans=kwargs.get('in_chans', 3))
+        # load_pretrained(model, num_classes=model.num_classes, in_chans=kwargs.get('in_chans', 3))
     return model
