@@ -22,6 +22,10 @@ class ImageIRnet(nn.Module):
                 nn.Linear(args.encoder_dim[2], args.dim),
                 nn.GELU(),
                 nn.Linear(args.dim, args.dim),)
+        self.mlp8 = nn.Sequential(
+                nn.Linear(args.encoder_dim[1], args.dim),
+                nn.GELU(),
+                nn.Linear(args.dim, args.dim),)
         
         self.norm1 = nn.LayerNorm(args.dim)
         self.mlp1 = nn.Sequential(
@@ -30,7 +34,15 @@ class ImageIRnet(nn.Module):
             nn.Linear(args.embed_dim, args.embed_dim),
         )
         self.fuse_32_16 = decoder_module(dim=args.embed_dim, token_dim=args.dim, img_size=args.img_size, ratio=16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), fuse=True)
-
+        self.fuse_16_8 = decoder_module(dim=args.embed_dim, token_dim=args.dim, img_size=args.img_size, ratio=8, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), fuse=True)
+       
+        self.norm = nn.LayerNorm(args.embed_dim * 2)
+        self.mlp_s = nn.Sequential(
+            nn.Linear(args.embed_dim * 2, args.embed_dim),
+            nn.GELU(),
+            nn.Linear(args.embed_dim, args.embed_dim),
+        )
+        
         self.decoder = Decoder(in_dim=384, image_size=352, num_classes=2)
         
     def forward(self, rgb_input, ir_input):
@@ -40,16 +52,21 @@ class ImageIRnet(nn.Module):
 
         rgb_feature_1_32 = self.mlp32(rgb_feature_1_32)
         rgb_feature_1_16 = self.mlp16(rgb_feature_1_16)
+        rgb_feature_1_8 = self.mlp8(rgb_feature_1_8)
         rgb_feature_1_16 = self.fuse_32_16(rgb_feature_1_32, rgb_feature_1_16)
-        rgb_feature_1_16 = self.mlp1(self.norm1(rgb_feature_1_16))
+        rgb_feature_1_8 = self.fuse_16_8(rgb_feature_1_16,rgb_feature_1_8)
+        rgb_feature_1_8 = self.mlp1(self.norm1(rgb_feature_1_8))
 
         ir_feature_1_32 = self.mlp32(ir_feature_1_32)
         ir_feature_1_16 = self.mlp16(ir_feature_1_16)
+        ir_feature_1_8 = self.mlp8(ir_feature_1_8)
         ir_feature_1_16 = self.fuse_32_16(ir_feature_1_32, ir_feature_1_16)
-        ir_feature_1_16 = self.mlp1(self.norm1(ir_feature_1_16))
+        ir_feature_1_8 = self.fuse_16_8(ir_feature_1_16,ir_feature_1_8)
+        ir_feature_1_8 = self.mlp1(self.norm1(ir_feature_1_8))
 
 
-        fusion_feature = torch.cat((rgb_feature_1_16, ir_feature_1_16), dim=-1)
+        fusion_feature = torch.cat((rgb_feature_1_8, ir_feature_1_8), dim=-1)
+        fusion_feature = self.mlp_s(self.norm(fusion_feature))
         fusion_feature = self.transformer(fusion_feature)
 
-        seg_mask, detect_out = Decoder(fusion_feature, rgb_feature_1_4, rgb_feature_1_8)
+        seg_mask, detect_out = Decoder(fusion_feature)
