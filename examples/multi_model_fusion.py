@@ -1,6 +1,6 @@
 from ..utils.transformer import Transformer
 from ..utils.swin_transformer import swin_transformer
-from ..utils.Decoder import decoder_module, Decoder
+from ..utils.Decoder import decoder_module, Seg_Decoder, Det_Decoder
 import torch.nn as nn
 import torch
 
@@ -43,8 +43,8 @@ class ImageIRnet(nn.Module):
             nn.Linear(args.embed_dim, args.embed_dim),
         )
         
-        self.decoder = Decoder(in_dim=384, image_size=352, num_classes=2)
-        
+        self.seg_decoder = Seg_Decoder(in_dim=384, image_size=352)
+        self.det_decoder = Det_Decoder(in_dim=384, image_size=352, num_classes=1, num_boxes=10)
     def forward(self, rgb_input, ir_input):
 
         rgb_feature_1_4, rgb_feature_1_8, rgb_feature_1_16, rgb_feature_1_32 = self.image_backbone(rgb_input)
@@ -69,4 +69,7 @@ class ImageIRnet(nn.Module):
         fusion_feature = self.mlp_s(self.norm(fusion_feature))
         fusion_feature = self.transformer(fusion_feature)
 
-        seg_mask, detect_out = Decoder(fusion_feature)
+        seg_mask = self.seg_decoder(fusion_feature)
+        logits, boxes = self.det_decoder(fusion_feature)
+
+        return seg_mask, logits, boxes

@@ -33,9 +33,9 @@ class decoder_module(nn.Module):       #单模态Stage 3 和 Stage 4融合
             dec_fea = self.concatFuse(torch.cat([dec_fea, enc_fea], dim=2))
         return dec_fea
     
-class Decoder(nn.Module):
-    def __init__(self, in_dim=384, image_size=352, num_classes=2):
-        super(Decoder, self).__init__()
+class Seg_Decoder(nn.Module):
+    def __init__(self, in_dim=384, image_size=352):
+        super(Seg_Decoder, self).__init__()
 
         self.size = image_size
         self.upsample1 = nn.Sequential(
@@ -56,24 +56,40 @@ class Decoder(nn.Module):
             nn.Conv2d(16, 1, kernel_size=1, padding=1),
             nn.Sigmoid())
         
-        # detect head
-        self.detect_head = nn.Sequential(
-            nn.Conv2d(in_dim, 128, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(128, num_classes + 4, kernel_size=1))
-        
     def forward(self, x):
         B, L, C = x.shape
-
         x = x.transpose(1, 2).reshape(B, C,  self.size // 8, self.size // 8)
         
         x_seg = self.upsample1(x)  
         x_seg = self.upsample2(x_seg)  
         seg_mask = self.upsample3(x_seg)  
-        
-        detect_out = self.detect_head(x)  # [B, num_classes+4, 22, 22]
-        b, c, _, _ = detect_out.shape
-        detect_out = detect_out.permute(0,2,3,1)
-        detect_out = detect_out.reshape(b,-1,c)
-        
-        return seg_mask, detect_out
+
+        return seg_mask
+
+class Det_Decoder(nn.Module):
+    def __init__(self, in_dim=384, image_size=352, num_classes=1, num_boxes=10):
+        super().__init__()
+        self.size = image_size
+        self.num_classes = num_classes
+        self.num_boxes = num_boxes
+        self.conv = nn.Sequential(
+            nn.Conv2d(in_dim, 256, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(256, 128, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.AdaptiveAvgPool2d((1, 1))
+        )
+        self.fc = nn.Linear(128, num_boxes * (4 + num_classes))
+
+    def forward(self, x):
+        B, L, C = x.shape
+        x = x.transpose(1, 2).reshape(B, C,  self.size // 8, self.size // 8)
+
+        x = self.conv(x).squeeze(-1).squeeze(-1)  # (B, 128)
+        out = self.fc(x).view(B, self.num_boxes, 4 + self.num_classes)
+
+        pred_boxes = out[..., :4].sigmoid()
+        pred_logits = out[..., 4:]
+
+        return pred_logits, pred_boxes
+
