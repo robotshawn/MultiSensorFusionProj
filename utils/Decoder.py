@@ -37,8 +37,12 @@ class decoder_module(nn.Module):
 
 #使用DETR构建解码器
 def DETR_decoder(args):
-    return build_model(args)
+    model, criterion, postprocessors = build_model(args)
+    return model
 
+def Criterion_Post(args):
+    model, criterion, postprocessors = build_model(args)
+    return criterion, postprocessors
 # class Seg_Decoder(nn.Module):
 #     def __init__(self, in_dim=384, image_size=352):
 #         super(Seg_Decoder, self).__init__()

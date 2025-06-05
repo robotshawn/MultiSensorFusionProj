@@ -65,7 +65,7 @@ class ImageIRnet(nn.Module):
             nn.Linear(args.embed_dim, args.embed_dim),
         )
 
-        self.decoder, self.criterion, self.postprocessors = DETR_decoder(args)
+        self.decoder = DETR_decoder(args)
 
     def forward(self, rgb_input, ir_input):
 
@@ -88,7 +88,7 @@ class ImageIRnet(nn.Module):
 
         outputs = self.decoder(fusion_feature)
 
-        return outputs, self.criterion, self.postprocessors
+        return outputs
 
         
 
