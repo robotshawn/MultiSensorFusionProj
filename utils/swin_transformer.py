@@ -8,7 +8,7 @@
 import torch
 import torch.nn as nn
 import torch.utils.checkpoint as checkpoint
-from timm.models.layers import DropPath, to_2tuple, trunc_normal_
+from timm.layers import DropPath, to_2tuple, trunc_normal_
 import torch.nn.functional as F
 
 try:
@@ -16,7 +16,7 @@ try:
 
     kernel_path = os.path.abspath(os.path.join('..'))
     sys.path.append(kernel_path)
-    from kernels.window_processs.window_process import WindowProcess, WindowProcessReverse
+    from kernels.window_process.window_process import WindowProcess, WindowProcessReverse
 
 except:
     WindowProcess = None
@@ -420,8 +420,10 @@ class BasicLayer(nn.Module):
             else:
                 x = blk(x)
         if self.downsample is not None:
-            x = self.downsample(x)
-        return x
+            x_new = self.downsample(x)
+            return x, x_new
+        else:
+            return x
 
     def extra_repr(self) -> str:
         return f"dim={self.dim}, input_resolution={self.input_resolution}, depth={self.depth}"
@@ -606,11 +608,10 @@ class SwinTransformer(nn.Module):
         x_1_32 = self.layers[3](x_1_32)
         x_1_32 = self.norm(x_1_32)
         return x_1_4, x_1_8, x_1_16, x_1_32
-        
 
     def forward(self, x):
         x_1_4, x_1_8, x_1_16, x_1_32 = self.forward_features(x)
-        x = self.head(x)
+        x = self.head(x_1_32)
         return x_1_4, x_1_8, x_1_16, x_1_32
 
     def flops(self):
@@ -621,13 +622,15 @@ class SwinTransformer(nn.Module):
         flops += self.num_features * self.patches_resolution[0] * self.patches_resolution[1] // (2 ** self.num_layers)
         flops += self.num_features * self.num_classes
         return flops
-    
+
+
 def swin_transformer(pretrained=True, **kwargs):  # adopt transformers for tokens to token
     # if pretrained:
     # kwargs.setdefault('qk_scale', 384 ** -0.5)
 
     # model = T2T_ViT(tokens_type='transformer', embed_dim=384, depth=14, num_heads=6, mlp_ratio=3., **kwargs)
-    model = SwinTransformer(img_size=352, embed_dim=96, depths=[2, 2, 6, 2], num_heads=[3, 6, 12, 24], window_size=11, drop_path_rate=0.1)
+    model = SwinTransformer(img_size=352, embed_dim=96, depths=[2, 2, 6, 2], num_heads=[3, 6, 12, 24], window_size=11,
+                            drop_path_rate=0.1)
     # model.default_cfg = default_cfgs['swin_transformer']
 
     args = kwargs['args']
