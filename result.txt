@@ -1,0 +1,32 @@
+==================================================
+EVALUATION RESULTS
+==================================================
+mAP@0.5: 0.4722
+mAP@0.75: 0.3363
+mAP@0.5:0.95: 0.3390
+
+Per-class AP@0.5:
+--------------------------------------------------
+aeroplane      : AP=0.3363, GT= 311, Det= 309
+bicycle        : AP=0.5067, GT= 389, Det= 382
+bird           : AP=0.5746, GT= 576, Det= 573
+boat           : AP=0.6073, GT= 393, Det= 387
+bottle         : AP=0.8675, GT= 657, Det= 647
+bus            : AP=0.3149, GT= 254, Det= 252
+car            : AP=0.5375, GT=1541, Det=1528
+cat            : AP=0.1095, GT= 370, Det= 370
+chair          : AP=0.8329, GT=1374, Det=1340
+cow            : AP=0.6462, GT= 329, Det= 327
+diningtable    : AP=0.2128, GT= 299, Det= 298
+dog            : AP=0.1976, GT= 530, Det= 525
+horse          : AP=0.2051, GT= 395, Det= 391
+motorbike      : AP=0.3899, GT= 369, Det= 367
+person         : AP=0.5240, GT=5227, Det=5137
+pottedplant    : AP=0.7570, GT= 592, Det= 591
+sheep          : AP=0.7249, GT= 311, Det= 307
+sofa           : AP=0.1891, GT= 396, Det= 395
+train          : AP=0.1698, GT= 302, Det= 301
+tvmonitor      : AP=0.7402, GT= 361, Det= 360
+--------------------------------------------------
+Total          : GT=14976, Det=14787
+Testing completed!
