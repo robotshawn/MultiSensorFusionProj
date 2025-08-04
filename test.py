@@ -578,11 +578,6 @@ class SwintransDetectTester:
             'total_detections': total_det
         }
 
-        results_path = os.path.join(self.output_dir, 'evaluation_results.json')
-        with open(results_path, 'w') as f:
-            json.dump(results, f, indent=2)
-        print(f"\nResults saved to {results_path}")
-
         return results
 
 
