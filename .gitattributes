@@ -1,0 +1,1 @@
+swin-faster-rcnn-voc/logs/pretrain_model.pth filter=lfs diff=lfs merge=lfs -text
