@@ -269,7 +269,7 @@ def Train(args):
         writer.add_scalar('epoch_obj_loss/train', epoch_obj_loss / iter_num, epoch + 1)
         writer.add_scalar('epoch_cls_loss/train', epoch_cls_loss / iter_num, epoch + 1)
 
-    torch.save(net.state_dict(), args.save_model_dir + 'SwintransDetect_1.pth')
+    torch.save(net.state_dict(), args.save_model_dir + 'Swin_Detect.pth')
     writer.close()
 
 

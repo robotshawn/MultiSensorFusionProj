@@ -19,7 +19,7 @@ class SwintransDetectTester:
     def __init__(self, model_path, args, device='cuda'):
         self.device = torch.device(device if torch.cuda.is_available() else 'cpu')
         self.args = args
-        self.model_path = os.path.join(model_path, "SwintransDetect_1.pth")
+        self.model_path = os.path.join(model_path, "Swin_Detect.pth")
 
         # VOC2007类别名称
         self.classes = ['aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car',
@@ -112,7 +112,7 @@ class SwintransDetectTester:
                 confidence = total_conf[j, i].item()
                 class_id = cls_indices[j, i].item()
 
-                # 解码边界框 (简化版本，您可能需要根据实际DFL实现调整)
+                # 解码边界框
                 box_params = box_pred_b[j, i]  # [4*reg_max]
 
                 # 简化解码：取每个坐标的期望值
@@ -214,7 +214,9 @@ class SwintransDetectTester:
         return inter_area / union_area if union_area > 0 else 0.0
 
     def visualize_detections(self, image, detections, gt_boxes=None, save_path=None):
-        """可视化检测结果"""
+        """
+        可视化检测结果 - 使用第一个代码中稳定的可视化方法
+        """
         try:
             print(f"Visualizing detections: {len(detections)} detections found")
 
@@ -237,7 +239,6 @@ class SwintransDetectTester:
                 font = ImageFont.truetype("arial.ttf", 16)
             except:
                 try:
-                    # 尝试其他常见字体
                     font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 16)
                 except:
                     font = ImageFont.load_default()
@@ -245,7 +246,7 @@ class SwintransDetectTester:
             h, w = vis_image.size[1], vis_image.size[0]
             print(f"Image size: {w}x{h}")
 
-            # 绘制真实标注（绿色）
+            # 绘制真实标注（绿色边界框）
             gt_count = 0
             if gt_boxes is not None and len(gt_boxes) > 0:
                 print(f"Drawing {len(gt_boxes)} ground truth boxes")
@@ -275,7 +276,7 @@ class SwintransDetectTester:
                     except Exception as e:
                         print(f"Error drawing GT box: {e}")
 
-            # 绘制预测结果（红色）
+            # 绘制预测结果（红色边界框）
             det_count = 0
             for det in detections:
                 try:
@@ -309,11 +310,10 @@ class SwintransDetectTester:
             # 保存图像
             if save_path:
                 try:
-                    # 确保目录存在
                     os.makedirs(os.path.dirname(save_path), exist_ok=True)
                     vis_image.save(save_path, quality=95)
                     print(f"Visualization saved to {save_path}")
-                    # 验证文件是否真的保存了
+
                     if os.path.exists(save_path):
                         file_size = os.path.getsize(save_path)
                         print(f"File saved successfully, size: {file_size} bytes")
@@ -500,7 +500,7 @@ class SwintransDetectTester:
                 # 评估
                 self.evaluate_batch(detections, targets, img_ids)
 
-                #可视化保存
+                # 保存可视化结果
                 if save_visualizations:
                     print(f"Saving visualizations for batch {batch_idx}")
                     for i, (image, dets, img_id) in enumerate(zip(images, detections, img_ids)):
@@ -526,7 +526,7 @@ class SwintransDetectTester:
                         )
                         print(f"Saving to: {save_path}")
 
-                        # 可视化（即使没有检测结果也保存原图）
+                        # 可视化
                         try:
                             result = self.visualize_detections(image, dets, batch_gt, save_path)
                             if result is None:
@@ -578,10 +578,17 @@ class SwintransDetectTester:
             'total_detections': total_det
         }
 
+        # 保存结果到JSON文件
+        results_path = os.path.join(self.output_dir, 'evaluation_results.json')
+        with open(results_path, 'w') as f:
+            json.dump(results, f, indent=4)
+        print(f"Evaluation results saved to {results_path}")
+
         return results
 
 
 def Test(args):
+    """主函数：测试模型并进行评估"""
     # 检查模型文件是否存在
     if not os.path.exists(args.save_model_dir):
         print(f"Error: Model file {args.save_model_dir} not found!")
@@ -609,4 +616,6 @@ def Test(args):
         save_visualizations=args.save_visualizations
     )
 
-    print("Testing completed!")
+    print("Testing completed! Check the output directory for visualized images and evaluation results.")
+
+

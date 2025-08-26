@@ -56,7 +56,7 @@ class SwinDetect(nn.Module):
         self.embed_dim = embed_dim  # transformer特征维度
         self.img_size = img_size  # 输入图像大小
         self.reg_max = reg_max  # DFL通道数
-        self.feature_size = img_size // 4  # 特征图尺寸
+        self.feature_size = img_size // 8  # 特征图尺寸
 
         # 计算中间通道数
         c2 = max(16, embed_dim // 4, self.reg_max * 4)  # 边界框分支通道数
