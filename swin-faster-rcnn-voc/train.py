@@ -208,15 +208,15 @@ if __name__ == "__main__":
     #         lr_scheduler.step()
 
     if True:
-        lr              = 1e-5
-        Batch_size      = 1
-        Freeze_Epoch    = 0
-        Unfreeze_Epoch  = 250
+        lr = 1e-4
+        Batch_size = 10
+        Freeze_Epoch = 0
+        Unfreeze_Epoch = 500
 
-        optimizer       = optim.Adam(net.parameters(), lr, weight_decay=5e-4)
-        lr_scheduler    = optim.lr_scheduler.StepLR(optimizer, step_size=2, gamma=0.95)
+        optimizer = optim.AdamW(net.parameters(), lr, weight_decay=5e-4)
+        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=500, eta_min=1e-6)
         # optimizer = torch.optim.SGD(net.parameters(), lr=lr, momentum=0.9, weight_decay=1e-4)
-        # lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[60, 100], gamma=0.1)
+        # lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[100, 180, 250], gamma=0.1)
 
         train_dataset   = FRCNNDataset(lines[:num_train], (input_shape[0], input_shape[1]), is_train=False)
         val_dataset     = FRCNNDataset(lines[num_train:], (input_shape[0], input_shape[1]), is_train=False)

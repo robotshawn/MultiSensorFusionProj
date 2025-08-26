@@ -22,8 +22,8 @@ class FRCNN(object):
     _defaults = {
         "model_path"    : 'logs/best_model.pth',
         "classes_path"  : 'model_data/voc_classes.txt',
-        "confidence"    : 0.4,
-        "iou"           : 0.2,
+        "confidence"    : 0.5,
+        "iou"           : 0.1,
         "backbone"      : "Swin",
         "cuda"          : True,
     }
